@@ -1,5 +1,7 @@
 # JWT Library for MoonBit
 
+[![CI](https://github.com/YOUR_USERNAME/JWT/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/JWT/actions/workflows/ci.yml)
+
 English | [中文](README_zh_CN.md)
 
 A comprehensive JSON Web Token (JWT) library implemented in MoonBit, providing standardized cryptographic interfaces for secure information exchange.

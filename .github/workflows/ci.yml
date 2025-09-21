@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup MoonBit
+      uses: moonbitlang/setup-moonbit@v1
+      with:
+        moonbit-version: latest
+    
+    - name: Install dependencies
+      run: moon install
+    
+    - name: Run tests
+      run: moon test
+    
+    - name: Build project
+      run: moon build
+    
+    - name: Check formatting
+      run: moon fmt --check
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup MoonBit
+      uses: moonbitlang/setup-moonbit@v1
+      with:
+        moonbit-version: latest
+    
+    - name: Install dependencies
+      run: moon install
+    
+    - name: Run linter
+      run: moon check 
