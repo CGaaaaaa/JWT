@@ -1,6 +1,6 @@
 # JWT Library for MoonBit
 
-[![CI](https://github.com/YOUR_USERNAME/JWT/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/JWT/actions/workflows/ci.yml)
+[![CI](https://github.com/CGaaaaaa/JWT/actions/workflows/ci.yml/badge.svg)](https://github.com/CGaaaaaa/JWT/actions/workflows/ci.yml)
 
 [English](README.md) | 中文
 
