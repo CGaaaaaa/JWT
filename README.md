@@ -1,5 +1,7 @@
 # JWT Library for MoonBit
 
+[English](README.md) | [中文](README_zh_CN.md)
+
 A comprehensive JSON Web Token (JWT) library implemented in MoonBit, providing standardized cryptographic interfaces for secure information exchange.
 
 ## 📖 Overview
