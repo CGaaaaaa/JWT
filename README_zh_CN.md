@@ -1,6 +1,6 @@
 # JWT Library for MoonBit
 
-[English](README.md) | [中文](README_zh_CN.md)
+[English](README.md) | 中文
 
 一个用 MoonBit 实现的综合性 JSON Web Token (JWT) 库，提供标准化的加密接口，用于安全的信息交换。
 
