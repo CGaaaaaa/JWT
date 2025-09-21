@@ -1,7 +1,0 @@
-{
-  "is-main": false,
-  "deps": [
-    "moonbitlang/core/builtin",
-    "moonbitlang/core/string"
-  ]
-} 
