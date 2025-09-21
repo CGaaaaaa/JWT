@@ -2,6 +2,7 @@
 // 参考 Rust signature 库的设计思想
 
 // 签名算法特质接口 - 标准化所有签名算法的行为
+
 ///|
 pub trait Signer {
   // 对数据进行签名

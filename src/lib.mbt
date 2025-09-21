@@ -2,6 +2,7 @@
 // 提供便捷的JWT操作接口
 
 // JWT 构建器模式
+
 ///|
 pub struct JwtBuilder {
   subject : String
@@ -97,12 +98,7 @@ pub fn JwtManager::new(
   public_key : String,
   default_issuer : String,
 ) -> JwtManager {
-  {
-    private_key,
-    public_key,
-    default_issuer,
-    default_expiration_seconds: 3600, // 默认1小时
-  }
+  { private_key, public_key, default_issuer, default_expiration_seconds: 3600 } // 默认1小时
 }
 
 ///|

@@ -2,6 +2,7 @@
 // 参考 Rust RustCrypto/hashes 库的设计思想
 
 // 哈希算法特质接口 - 标准化所有哈希算法的行为
+
 ///|
 pub trait Hasher {
   // 计算哈希值

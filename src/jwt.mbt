@@ -2,6 +2,7 @@
 // 实现 RFC 7519 JSON Web Token 标准
 
 // JWT 头部结构
+
 ///|
 pub struct JwtHeader {
   algorithm : String // 签名算法，如 "RS256"
