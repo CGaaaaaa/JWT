@@ -1,0 +1,6 @@
+{
+  "is-main": true,
+  "deps": {
+    "reactivex": "../src/lib"
+  }
+}

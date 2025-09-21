@@ -1,0 +1,113 @@
+{
+  "source_dir": "/Users/consingliu/Desktop/des/J139/JWT",
+  "name": "JWT",
+  "packages": [
+    {
+      "is-main": true,
+      "is-third-party": false,
+      "root-path": "/Users/consingliu/Desktop/des/J139/JWT",
+      "root": "JWT",
+      "rel": "",
+      "files": {
+        "/Users/consingliu/Desktop/des/J139/JWT/main.mbt": {
+          "backend": [
+            "Wasm",
+            "WasmGC",
+            "Js",
+            "Native",
+            "LLVM"
+          ],
+          "optlevel": [
+            "Debug",
+            "Release"
+          ]
+        }
+      },
+      "wbtest-files": {},
+      "test-files": {},
+      "mbt-md-files": {},
+      "deps": [
+        {
+          "path": "JWT/src",
+          "alias": "src",
+          "fspath": "/Users/consingliu/Desktop/des/J139/JWT/src"
+        }
+      ],
+      "wbtest-deps": [],
+      "test-deps": [],
+      "artifact": "/Users/consingliu/Desktop/des/J139/JWT/target/wasm-gc/release/check/JWT.mi"
+    },
+    {
+      "is-main": false,
+      "is-third-party": false,
+      "root-path": "/Users/consingliu/Desktop/des/J139/JWT/src",
+      "root": "JWT",
+      "rel": "src",
+      "files": {
+        "/Users/consingliu/Desktop/des/J139/JWT/src/hash.mbt": {
+          "backend": [
+            "Wasm",
+            "WasmGC",
+            "Js",
+            "Native",
+            "LLVM"
+          ],
+          "optlevel": [
+            "Debug",
+            "Release"
+          ]
+        },
+        "/Users/consingliu/Desktop/des/J139/JWT/src/jwt.mbt": {
+          "backend": [
+            "Wasm",
+            "WasmGC",
+            "Js",
+            "Native",
+            "LLVM"
+          ],
+          "optlevel": [
+            "Debug",
+            "Release"
+          ]
+        },
+        "/Users/consingliu/Desktop/des/J139/JWT/src/signature.mbt": {
+          "backend": [
+            "Wasm",
+            "WasmGC",
+            "Js",
+            "Native",
+            "LLVM"
+          ],
+          "optlevel": [
+            "Debug",
+            "Release"
+          ]
+        },
+        "/Users/consingliu/Desktop/des/J139/JWT/src/lib.mbt": {
+          "backend": [
+            "Wasm",
+            "WasmGC",
+            "Js",
+            "Native",
+            "LLVM"
+          ],
+          "optlevel": [
+            "Debug",
+            "Release"
+          ]
+        }
+      },
+      "wbtest-files": {},
+      "test-files": {},
+      "mbt-md-files": {},
+      "deps": [],
+      "wbtest-deps": [],
+      "test-deps": [],
+      "artifact": "/Users/consingliu/Desktop/des/J139/JWT/target/wasm-gc/release/check/src/src.mi"
+    }
+  ],
+  "deps": [],
+  "backend": "wasm-gc",
+  "opt_level": "release",
+  "source": null
+}

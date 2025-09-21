@@ -1,0 +1,11 @@
+{
+  "name": "JWT",
+  "version": "0.1.0",
+  "deps": {
+  },
+  "readme": "README.md",
+  "repository": "",
+  "license": "Apache-2.0",
+  "keywords": [],
+  "description": "A JWT library implementation in MoonBit with standardized cryptographic interfaces"
+} 
