@@ -34,7 +34,7 @@ pub trait Hasher {
   algorithm_name(Self) -> String
 }
 
-///
+///|
 /// SHA-256 Hasher Implementation
 /// A hasher implementation for the SHA-256 algorithm.
 pub struct Sha256Hasher {
@@ -115,27 +115,8 @@ pub struct Md5Hasher {
 /// Creates a new `Md5Hasher` instance.
 ///
 /// Returns a new `Md5Hasher`.
-///
-/// Example:
-///
-/// ```moonbit
-/// let hasher = Md5Hasher::new()
-/// inspect(hasher.algorithm_name(), content="MD5")
-/// ```
 pub fn Md5Hasher::new() -> Md5Hasher {
   { name: "MD5" }
-}
-
-///|
-/// Returns the name of the hash algorithm.
-///
-/// Parameters:
-///
-/// * `self`: The hasher instance.
-///
-/// Returns the algorithm name as a `String`.
-pub fn Md5Hasher::algorithm_name(self : Md5Hasher) -> String {
-  self.name
 }
 
 ///|
@@ -254,8 +235,6 @@ pub fn multi_round_hash(
   }
   result
 }
-
-
 
 ///|
 /// Salted hashing
