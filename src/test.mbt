@@ -1,73 +1,84 @@
-// JWT库全面功能测试
-// 确保90%以上代码覆盖率
+// Comprehensive functional tests for the JWT library
+// Ensure over 90% code coverage
 
 ///|
-test "JWT Header基础功能测试" {
-  // 测试基础Header创建
+/// Tests the basic functionality of `JwtHeader`.
+///
+/// This test covers the creation of a basic header, a header with a key ID (`kid`),
+/// and the JSON serialization of both.
+test "JWT Header Basic Functionality Test" {
+  // Test basic Header creation
   let header1 = JwtHeader::new("RS256", "JWT")
-  if header1.algorithm != "RS256" {
-    abort("Header算法不匹配")
-  }
-  if header1.token_type != "JWT" {
-    abort("Header类型不匹配")
-  }
+  assert_eq(header1.algorithm, "RS256", msg="Header algorithm mismatch")
+  assert_eq(header1.token_type, "JWT", msg="Header type mismatch")
 
-  // 测试带密钥ID的Header创建
+  // Test Header creation with key ID
   let header2 = JwtHeader::new_with_kid("RS256", "JWT", "key-2024")
-  if header2.algorithm != "RS256" {
-    abort("带Kid的Header算法不匹配")
-  }
+  assert_eq(
+    header2.algorithm,
+    "RS256",
+    msg="Header algorithm with Kid mismatch",
+  )
   match header2.key_id {
-    Some(kid) => if kid != "key-2024" { abort("密钥ID不匹配") }
-    None => abort("密钥ID应该存在")
+    Some(kid) => assert_eq(kid, "key-2024", msg="Key ID mismatch")
+    None => fail("Key ID should exist")
   }
 
-  // 测试Header JSON序列化
+  // Test Header JSON serialization
   let json1 = header1.to_json()
-  if not(json1.contains("\"alg\":\"RS256\"")) {
-    abort("Header JSON缺少算法字段")
-  }
-  if not(json1.contains("\"typ\":\"JWT\"")) {
-    abort("Header JSON缺少类型字段")
-  }
+  assert_true(
+    json1.contains("\"alg\":\"RS256\""),
+    msg="Header JSON missing algorithm field",
+  )
+  assert_true(
+    json1.contains("\"typ\":\"JWT\""),
+    msg="Header JSON missing type field",
+  )
   let json2 = header2.to_json()
-  if not(json2.contains("\"kid\":\"key-2024\"")) {
-    abort("Header JSON缺少密钥ID字段")
-  }
+  assert_true(
+    json2.contains("\"kid\":\"key-2024\""),
+    msg="Header JSON missing key ID field",
+  )
 }
 
 ///|
-test "JWT Payload基础功能测试" {
-  // 测试基础Payload创建
+/// Tests the basic functionality of `JwtPayload`.
+///
+/// This test covers the creation of payloads with different sets of claims
+/// and the JSON serialization and time-based validation of the payload.
+test "JWT Payload Basic Functionality Test" {
+  // Test basic Payload creation
   let payload1 = JwtPayload::new(
     "user123", "test-issuer", 1735689600, 1640995200,
   )
-  if payload1.subject != "user123" {
-    abort("Payload主题不匹配")
-  }
-  if payload1.issuer != "test-issuer" {
-    abort("Payload签发者不匹配")
-  }
-  if payload1.expiration != 1735689600 {
-    abort("Payload过期时间不匹配")
-  }
-  if payload1.issued_at != 1640995200 {
-    abort("Payload签发时间不匹配")
-  }
+  assert_eq(payload1.subject, "user123", msg="Payload subject mismatch")
+  assert_eq(payload1.issuer, "test-issuer", msg="Payload issuer mismatch")
+  assert_eq(
+    payload1.expiration,
+    1735689600,
+    msg="Payload expiration time mismatch",
+  )
+  assert_eq(
+    payload1.issued_at,
+    1640995200,
+    msg="Payload issued at time mismatch",
+  )
 
-  // 测试带受众的Payload创建
+  // Test Payload creation with audience
   let payload2 = JwtPayload::new_with_audience(
     "user456", "api-service", 1735689600, 1640995200, "mobile-app",
   )
-  if payload2.subject != "user456" {
-    abort("带受众的Payload主题不匹配")
-  }
+  assert_eq(
+    payload2.subject,
+    "user456",
+    msg="Payload subject with audience mismatch",
+  )
   match payload2.audience {
-    Some(aud) => if aud != "mobile-app" { abort("受众不匹配") }
-    None => abort("受众应该存在")
+    Some(aud) => assert_eq(aud, "mobile-app", msg="Audience mismatch")
+    None => fail("Audience should exist")
   }
 
-  // 测试完整Payload创建
+  // Test full Payload creation
   let payload3 = JwtPayload::new_full(
     "admin",
     "auth-service",
@@ -76,244 +87,240 @@ test "JWT Payload基础功能测试" {
     Some(1640995200),
     Some("admin-panel"),
   )
-  if payload3.subject != "admin" {
-    abort("完整Payload主题不匹配")
-  }
+  assert_eq(payload3.subject, "admin", msg="Full Payload subject mismatch")
   match payload3.not_before {
-    Some(nbf) => if nbf != 1640995200 { abort("not_before时间不匹配") }
-    None => abort("not_before应该存在")
+    Some(nbf) => assert_eq(nbf, 1640995200, msg="not_before time mismatch")
+    None => fail("not_before should exist")
   }
 
-  // 测试Payload JSON序列化
+  // Test Payload JSON serialization
   let json = payload1.to_json()
-  if not(json.contains("\"sub\":\"user123\"")) {
-    abort("Payload JSON缺少主题字段")
-  }
-  if not(json.contains("\"iss\":\"test-issuer\"")) {
-    abort("Payload JSON缺少签发者字段")
-  }
+  assert_true(
+    json.contains("\"sub\":\"user123\""),
+    msg="Payload JSON missing subject field",
+  )
+  assert_true(
+    json.contains("\"iss\":\"test-issuer\""),
+    msg="Payload JSON missing issuer field",
+  )
 
-  // 测试时间验证
+  // Test time validation
   let is_valid = payload1.is_valid(1640995300)
-  if not(is_valid) {
-    abort("时间验证失败")
-  }
+  assert_true(is_valid, msg="Time validation failed")
 }
 
 ///|
-test "哈希算法功能测试" {
-  // 测试SHA256哈希器
+/// Tests the functionality of the hash algorithms.
+///
+/// This test covers the creation of hashers, computing and verifying hashes,
+/// and advanced hashing techniques like multi-round and salted hashing.
+test "Hash Algorithm Functionality Test" {
+  // Test SHA256 hasher
   let sha256_hasher = Sha256Hasher::new()
-  if sha256_hasher.name != "SHA-256" {
-    abort("SHA256哈希器名称不匹配")
-  }
+  assert_eq(sha256_hasher.name, "SHA-256", msg="SHA256 hasher name mismatch")
 
-  // 测试MD5哈希器
+  // Test MD5 hasher
   let md5_hasher = Md5Hasher::new()
-  if md5_hasher.name != "MD5" {
-    abort("MD5哈希器名称不匹配")
-  }
+  assert_eq(md5_hasher.name, "MD5", msg="MD5 hasher name mismatch")
 
-  // 测试哈希工厂函数
+  // Test hash factory function
   let hash1 = compute_hash("test", SHA256)
-  if hash1.length() == 0 {
-    abort("SHA256哈希结果为空")
-  }
+  assert_true(hash1.length() > 0, msg="SHA256 hash result is empty")
   let hash2 = compute_hash("test", MD5)
-  if hash2.length() == 0 {
-    abort("MD5哈希结果为空")
-  }
+  assert_true(hash2.length() > 0, msg="MD5 hash result is empty")
 
-  // 测试哈希验证
+  // Test hash verification
   let verified = verify_hash("test", hash1, SHA256)
-  if not(verified) {
-    abort("哈希验证失败")
-  }
+  assert_true(verified, msg="Hash verification failed")
 
-  // 测试多轮哈希
+  // Test multi-round hash
   let multi_hash = multi_round_hash("test", 3, SHA256)
-  if multi_hash.length() == 0 {
-    abort("多轮哈希结果为空")
-  }
+  assert_true(multi_hash.length() > 0, msg="Multi-round hash result is empty")
 
-  // 测试加盐哈希
+  // Test salted hash
   let salted = salted_hash("test", "salt123", SHA256)
-  if salted.length() == 0 {
-    abort("加盐哈希结果为空")
-  }
+  assert_true(salted.length() > 0, msg="Salted hash result is empty")
 
-  // 测试哈希创建器工厂
+  // Test hash creator factory
   let hasher = Sha256Hasher::new()
-  if hasher.name != "SHA-256" {
-    abort("工厂创建的哈希器名称不匹配")
-  }
+  assert_eq(hasher.name, "SHA-256", msg="Factory-created hasher name mismatch")
 }
 
 ///|
-test "签名算法功能测试" {
+/// Tests the functionality of the signature algorithms.
+///
+/// This test covers the creation of signers and verifiers, signing data,
+/// and verifying signatures using the RS256 algorithm.
+test "Signature Algorithm Functionality Test" {
   let private_key = "-----BEGIN PRIVATE KEY-----test-key-----END PRIVATE KEY-----"
   let public_key = "-----BEGIN PUBLIC KEY-----test-key-----END PUBLIC KEY-----"
 
-  // 测试RS256签名器创建
+  // Test RS256 signer creation
   let signer = Rs256Signer::new(private_key)
-  if signer.algorithm != "RS256" {
-    abort("RS256签名器算法不匹配")
-  }
+  assert_eq(signer.algorithm, "RS256", msg="RS256 signer algorithm mismatch")
 
-  // 测试RS256验证器创建
+  // Test RS256 verifier creation
   let verifier = Rs256Verifier::new(public_key)
-  if verifier.algorithm != "RS256" {
-    abort("RS256验证器算法不匹配")
-  }
+  assert_eq(
+    verifier.algorithm,
+    "RS256",
+    msg="RS256 verifier algorithm mismatch",
+  )
 
-  // 测试签名工厂函数
+  // Test signature factory functions
   let factory_signer = create_rs256_signer(private_key)
-  if factory_signer.algorithm != "RS256" {
-    abort("工厂签名器算法不匹配")
-  }
+  assert_eq(
+    factory_signer.algorithm,
+    "RS256",
+    msg="Factory signer algorithm mismatch",
+  )
   let factory_verifier = create_rs256_verifier(public_key)
-  if factory_verifier.algorithm != "RS256" {
-    abort("工厂验证器算法不匹配")
-  }
+  assert_eq(
+    factory_verifier.algorithm,
+    "RS256",
+    msg="Factory verifier algorithm mismatch",
+  )
 
-  // 测试直接签名和验证
+  // Test direct signing and verification
   let signature = sign_with_rs256("test-data", private_key)
-  if signature.length() == 0 {
-    abort("签名结果为空")
-  }
-  if not(signature.contains("base64url_")) {
-    abort("签名格式不正确: " + signature)
-  }
+  assert_true(signature.length() > 0, msg="Signature result is empty")
+  assert_true(
+    signature.contains("base64url_"),
+    msg="Incorrect signature format: " + signature,
+  )
   let is_verified = verify_with_rs256("test-data", signature, public_key)
-  if not(is_verified) {
-    let converted_key = public_key.replace(old="PUBLIC", new="PRIVATE")
-    abort(
-      "签名验证失败. 签名: " +
-      signature +
-      ", 公钥: " +
-      public_key +
-      ", 转换密钥: " +
-      converted_key,
-    )
-  }
+  assert_true(is_verified, msg="Signature verification failed")
 
-  // 测试密钥对
+  // Test key pair
   let key_pair = Rs256KeyPair::new(private_key, public_key)
   let pair_signer = key_pair.create_signer()
-  if pair_signer.algorithm != "RS256" {
-    abort("密钥对签名器算法不匹配")
-  }
+  assert_eq(
+    pair_signer.algorithm,
+    "RS256",
+    msg="Key pair signer algorithm mismatch",
+  )
   let pair_verifier = key_pair.create_verifier()
-  if pair_verifier.algorithm != "RS256" {
-    abort("密钥对验证器算法不匹配")
-  }
+  assert_eq(
+    pair_verifier.algorithm,
+    "RS256",
+    msg="Key pair verifier algorithm mismatch",
+  )
 }
 
 ///|
-test "JWT完整流程功能测试" {
+/// Tests the end-to-end JWT creation, parsing, and verification process.
+///
+/// This test ensures that a JWT can be created, signed, parsed, and successfully
+/// verified with a valid key, and that verification fails with an invalid key.
+test "JWT Full Workflow Functionality Test" {
   let private_key = "-----BEGIN PRIVATE KEY-----test-key-----END PRIVATE KEY-----"
   let public_key = "-----BEGIN PUBLIC KEY-----test-key-----END PUBLIC KEY-----"
 
-  // 测试快速JWT创建
+  // Test quick JWT creation
   let jwt1 = create_rs256_jwt("user123", "test-issuer", 1735689600, private_key)
-  if not(jwt1.contains(".")) {
-    abort("JWT格式不正确: " + jwt1)
-  }
-  if jwt1.length() <= 50 {
-    abort("JWT长度太短: " + jwt1.length().to_string() + ", 内容: " + jwt1)
-  }
+  assert_true(jwt1.contains("."), msg="Incorrect JWT format: " + jwt1)
+  assert_true(
+    jwt1.length() > 50,
+    msg="JWT length too short: " +
+      jwt1.length().to_string() +
+      ", Content: " +
+      jwt1,
+  )
 
-  // 测试带受众的JWT创建
+  // Test JWT creation with audience
   let jwt2 = create_rs256_jwt_with_audience(
     "user456", "api-service", 1735689600, "mobile-app", private_key,
   )
-  if not(jwt2.contains(".")) {
-    abort("带受众的JWT格式不正确")
-  }
-  if jwt2.length() <= 50 {
-    abort("带受众的JWT长度太短")
-  }
+  assert_true(jwt2.contains("."), msg="Incorrect JWT format with audience")
+  assert_true(jwt2.length() > 50, msg="JWT with audience length too short")
 
-  // 测试带密钥ID的JWT创建
+  // Test JWT creation with key ID
   let jwt3 = create_rs256_jwt_with_kid(
     "admin", "auth-service", 1735689600, "key-2024", private_key,
   )
-  if not(jwt3.contains(".")) {
-    abort("带密钥ID的JWT格式不正确")
-  }
+  assert_true(jwt3.contains("."), msg="Incorrect JWT format with key ID")
 
-  // 测试JWT解析
+  // Test JWT parsing
   let parsed = parse_jwt(jwt1)
   match parsed {
     Some(jwt) => {
-      if jwt.header.algorithm != "RS256" {
-        abort("解析的JWT Header算法不匹配")
-      }
-      if jwt.payload.subject != "user123" {
-        abort("解析的JWT Payload主题不匹配")
-      }
+      assert_eq(
+        jwt.header.algorithm,
+        "RS256",
+        msg="Parsed JWT Header algorithm mismatch",
+      )
+      assert_eq(
+        jwt.payload.subject,
+        "user123",
+        msg="Parsed JWT Payload subject mismatch",
+      )
     }
-    None => abort("JWT解析失败")
+    None => fail("JWT parsing failed")
   }
 
-  // 测试JWT验证
+  // Test JWT verification
   let is_valid = verify_rs256_jwt(jwt1, public_key)
-  if not(is_valid) {
-    abort("JWT验证失败")
-  }
+  assert_true(is_valid, msg="JWT verification failed")
 
-  // 测试错误的JWT验证
+  // Test incorrect JWT verification
   let wrong_key = "-----BEGIN PUBLIC KEY-----wrong-key-----END PUBLIC KEY-----"
   let is_invalid = verify_rs256_jwt(jwt1, wrong_key)
-  if is_invalid {
-    abort("错误的密钥验证应该失败")
-  }
+  assert_false(is_invalid, msg="Verification with wrong key should fail")
 }
 
 ///|
-test "JWT构建器功能测试" {
+/// Tests the `JwtBuilder` for creating JWTs.
+///
+/// This test covers the fluent interface of the builder, including adding
+/// optional claims like audience, "not before", and key ID.
+test "JWT Builder Functionality Test" {
   let private_key = "-----BEGIN PRIVATE KEY-----test-key-----END PRIVATE KEY-----"
 
-  // 测试基础构建器
+  // Test basic builder
   let builder = JwtBuilder::new(
     "test-user", "test-issuer", 1735689600, private_key,
   )
   let basic_jwt = builder.build()
-  if not(basic_jwt.contains(".")) {
-    abort("构建器生成的JWT格式不正确")
-  }
-  if basic_jwt.length() <= 50 {
-    abort("构建器生成的JWT长度太短")
-  }
+  assert_true(
+    basic_jwt.contains("."),
+    msg="Builder-generated JWT format is incorrect",
+  )
+  assert_true(
+    basic_jwt.length() > 50,
+    msg="Builder-generated JWT length is too short",
+  )
 
-  // 测试带受众的构建器
+  // Test builder with audience
   let builder_with_aud = JwtBuilder::new(
     "test-user", "test-issuer", 1735689600, private_key,
   ).with_audience("test-audience")
   let jwt_with_aud = builder_with_aud.build()
-  if not(jwt_with_aud.contains(".")) {
-    abort("带受众的构建器JWT格式不正确")
-  }
+  assert_true(
+    jwt_with_aud.contains("."),
+    msg="Builder with audience JWT format is incorrect",
+  )
 
-  // 测试带not_before的构建器
+  // Test builder with not_before
   let builder_with_nbf = JwtBuilder::new(
     "test-user", "test-issuer", 1735689600, private_key,
   ).with_not_before(1640995200)
   let jwt_with_nbf = builder_with_nbf.build()
-  if not(jwt_with_nbf.contains(".")) {
-    abort("带not_before的构建器JWT格式不正确")
-  }
+  assert_true(
+    jwt_with_nbf.contains("."),
+    msg="Builder with not_before JWT format is incorrect",
+  )
 
-  // 测试带密钥ID的构建器
+  // Test builder with key ID
   let builder_with_kid = JwtBuilder::new(
     "test-user", "test-issuer", 1735689600, private_key,
   ).with_key_id("builder-key")
   let jwt_with_kid = builder_with_kid.build()
-  if not(jwt_with_kid.contains(".")) {
-    abort("带密钥ID的构建器JWT格式不正确")
-  }
+  assert_true(
+    jwt_with_kid.contains("."),
+    msg="Builder with key ID JWT format is incorrect",
+  )
 
-  // 测试完整功能的构建器
+  // Test full-featured builder
   let full_builder = JwtBuilder::new(
       "test-user", "test-issuer", 1735689600, private_key,
     )
@@ -321,78 +328,85 @@ test "JWT构建器功能测试" {
     .with_not_before(1640995200)
     .with_key_id("full-key")
   let full_jwt = full_builder.build()
-  if not(full_jwt.contains(".")) {
-    abort("完整功能构建器JWT格式不正确")
-  }
-  if full_jwt.length() <= 100 {
-    abort("完整功能构建器JWT长度不足")
-  }
+  assert_true(
+    full_jwt.contains("."),
+    msg="Full-featured builder JWT format is incorrect",
+  )
+  assert_true(
+    full_jwt.length() > 100,
+    msg="Full-featured builder JWT length is insufficient",
+  )
 }
 
 ///|
-test "边界条件和错误处理测试" {
-  // 测试空字符串输入
+/// Tests boundary conditions and error handling.
+///
+/// This test includes checks for empty and long string inputs, parsing of invalid JWTs,
+/// and validation of expired tokens.
+test "Boundary Conditions and Error Handling Test" {
+  // Test empty string input
   let empty_hash = compute_hash("", SHA256)
-  if empty_hash.length() == 0 {
-    abort("空字符串哈希结果为空")
-  }
+  assert_true(empty_hash.length() > 0, msg="Empty string hash result is empty")
 
-  // 测试长字符串输入
+  // Test long string input
   let long_data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   let long_hash = compute_hash(long_data, SHA256)
-  if long_hash.length() == 0 {
-    abort("长字符串哈希结果为空")
-  }
+  assert_true(long_hash.length() > 0, msg="Long string hash result is empty")
 
-  // 测试无效JWT解析
+  // Test invalid JWT parsing
   let invalid_jwt = parse_jwt("invalid.jwt.token")
-  match invalid_jwt {
-    Some(_) => abort("无效JWT不应该解析成功")
-    None => () // 正确行为
-  }
+  assert_true(
+    invalid_jwt is None,
+    msg="Invalid JWT should not parse successfully",
+  )
 
-  // 测试过期时间验证
-  let expired_payload = JwtPayload::new("user", "issuer", 1000, 2000) // 过期时间小于签发时间
+  // Test expiration time validation
+  let expired_payload = JwtPayload::new("user", "issuer", 1000, 2000) // Expiration time is less than issued at time
   let is_expired_valid = expired_payload.is_valid(1500)
-  if is_expired_valid {
-    abort("过期的payload不应该验证通过")
-  }
+  assert_false(is_expired_valid, msg="Expired payload should not validate")
 }
 
 ///|
-test "高级功能和性能测试" {
-  // 测试不同算法的哈希比较
+/// Tests advanced features and performance aspects.
+///
+/// This test compares the outputs of different hash algorithms to ensure they
+/// produce distinct results with expected length differences.
+test "Advanced Features and Performance Test" {
+  // Test hash comparison of different algorithms
   let test_data = "algorithm-comparison"
   let sha256_result = compute_hash(test_data, SHA256)
   let md5_result = compute_hash(test_data, MD5)
-  if sha256_result == md5_result {
-    abort(
-      "不同算法的哈希结果不应该相同: SHA256=" +
+  assert_not_eq(
+    sha256_result,
+    md5_result,
+    msg="Hash results of different algorithms should not be the same: SHA256=" +
       sha256_result +
       ", MD5=" +
       md5_result,
-    )
-  }
-  if sha256_result.length() <= md5_result.length() {
-    abort(
-      "SHA256哈希长度应该大于MD5: SHA256长度=" +
+  )
+  assert_true(
+    sha256_result.length() > md5_result.length(),
+    msg="SHA256 hash length should be greater than MD5: SHA256 length=" +
       sha256_result.length().to_string() +
-      ", MD5长度=" +
+      ", MD5 length=" +
       md5_result.length().to_string(),
-    )
-  }
+  )
 }
 
 ///|
-test "完整覆盖率验证测试" {
-  // 确保所有公共API都被测试到
-  println("=== JWT库完整功能覆盖率测试 ===")
+/// A test to ensure full code coverage of the public API.
+///
+/// This test calls all public functions to verify they are included in the
+/// test suite, aiming for over 90% code coverage.
+test "Full Coverage Verification Test" {
+  // Ensure all public APIs are tested
+  println("=== JWT Library Full Functionality Coverage Test ===")
 
-  // Header相关功能覆盖
+  // Header related function coverage
   ignore(JwtHeader::new("HS256", "JWT"))
   ignore(JwtHeader::new_with_kid("HS256", "JWT", "test-key"))
 
-  // Payload相关功能覆盖
+  // Payload related function coverage
   ignore(JwtPayload::new("test", "test", 1735689600, 1640995200))
   ignore(
     JwtPayload::new_with_audience(
@@ -410,13 +424,13 @@ test "完整覆盖率验证测试" {
     ),
   )
 
-  // 哈希器相关功能覆盖
+  // Hasher related function coverage
   ignore(Sha256Hasher::new())
   ignore(Md5Hasher::new())
   ignore(Sha256Hasher::new())
   ignore(Md5Hasher::new())
 
-  // 签名器相关功能覆盖
+  // Signer related function coverage
   let test_key = "test-key"
   ignore(Rs256Signer::new(test_key))
   ignore(Rs256Verifier::new(test_key))
@@ -424,7 +438,7 @@ test "完整覆盖率验证测试" {
   ignore(create_rs256_verifier(test_key))
   ignore(Rs256KeyPair::new(test_key, test_key))
 
-  // JWT相关功能覆盖
+  // JWT related function coverage
   ignore(create_rs256_jwt("test", "test", 1735689600, test_key))
   ignore(
     create_rs256_jwt_with_audience("test", "test", 1735689600, "test", test_key),
@@ -434,59 +448,63 @@ test "完整覆盖率验证测试" {
   )
   ignore(JwtBuilder::new("test", "test", 1735689600, test_key))
 
-  // 哈希和签名工具函数覆盖
+  // Hash and signature utility function coverage
   ignore(compute_hash("test", SHA256))
   ignore(verify_hash("test", "hash", SHA256))
   ignore(multi_round_hash("test", 1, SHA256))
   ignore(salted_hash("test", "salt", SHA256))
   ignore(sign_with_rs256("test", test_key))
   ignore(verify_with_rs256("test", "signature", test_key))
-  println("✅ 所有公共API函数已覆盖测试")
-  println("✅ 达到90%以上代码覆盖率目标")
+  println("✅ All public API functions are covered in tests")
+  println("✅ Reached over 90% code coverage goal")
 }
 
 ///|
-test "缺失函数覆盖补充测试" {
-  // 测试JwtManager相关功能
+/// A supplementary test to cover functions missed in other tests.
+///
+/// This test covers the `JwtManager`, `quick_jwt` functions, and the
+/// `is_valid_for_audience` method of `JwtPayload`.
+test "Supplementary Test for Missing Function Coverage" {
+  // Test JwtManager related functions
   let private_key = "-----BEGIN PRIVATE KEY-----test-key-----END PRIVATE KEY-----"
   let public_key = "-----BEGIN PUBLIC KEY-----test-key-----END PUBLIC KEY-----"
   let manager = JwtManager::new(private_key, public_key, "test-issuer")
   let token1 = manager.create_token("test-user")
-  if token1.length() == 0 {
-    abort("JwtManager创建token失败")
-  }
+  assert_true(token1.length() > 0, msg="JwtManager failed to create token")
   let token2 = manager.create_token_for_audience("test-user", "test-audience")
-  if token2.length() == 0 {
-    abort("JwtManager创建带受众token失败")
-  }
+  assert_true(
+    token2.length() > 0,
+    msg="JwtManager failed to create token with audience",
+  )
 
-  // 测试quick_jwt函数
+  // Test quick_jwt function
   let quick_token1 = quick_jwt("user123", "quick-issuer", 2, private_key)
-  if not(quick_token1.contains(".")) {
-    abort("quick_jwt生成的token格式不正确")
-  }
+  assert_true(
+    quick_token1.contains("."),
+    msg="quick_jwt generated token format is incorrect",
+  )
   let quick_token2 = quick_jwt_with_audience(
     "user456", "quick-issuer", 3, "quick-audience", private_key,
   )
-  if not(quick_token2.contains(".")) {
-    abort("quick_jwt_with_audience生成的token格式不正确")
-  }
+  assert_true(
+    quick_token2.contains("."),
+    msg="quick_jwt_with_audience generated token format is incorrect",
+  )
 
-  // 测试JwtPayload::is_valid_for_audience
+  // Test JwtPayload::is_valid_for_audience
   let payload_with_aud = JwtPayload::new_with_audience(
     "test-user", "test-issuer", 1735689600, 1640995200, "expected-audience",
   )
   let is_valid_aud = payload_with_aud.is_valid_for_audience(
     1640995300, "expected-audience",
   )
-  if not(is_valid_aud) {
-    abort("is_valid_for_audience验证失败")
-  }
+  assert_true(is_valid_aud, msg="is_valid_for_audience validation failed")
   let is_invalid_aud = payload_with_aud.is_valid_for_audience(
     1640995300, "wrong-audience",
   )
-  if is_invalid_aud {
-    abort("is_valid_for_audience对错误受众应该返回false")
-  }
-  println("✅ 补充缺失函数测试完成")
+  assert_false(
+    is_invalid_aud,
+    msg="is_valid_for_audience should return false for wrong audience",
+  )
+  println("✅ Supplementary test for missing functions completed")
 }
