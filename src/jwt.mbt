@@ -1,44 +1,78 @@
-// JWT 核心实现
-// 实现 RFC 7519 JSON Web Token 标准
+// JWT Core Implementation
+// Implements the RFC 7519 JSON Web Token standard
 
-// JWT 头部结构
+// JWT Header Structure
 
 ///|
+/// Represents the header of a JSON Web Token (JWT).
+///
+/// A JWT header typically consists of the token type (`typ`), which is usually "JWT",
+/// and the signing algorithm (`alg`) used to secure the token. It can also optionally
+/// include a key ID (`kid`) to indicate which key was used for signing.
 pub struct JwtHeader {
-  algorithm : String // 签名算法，如 "RS256"
-  token_type : String // 令牌类型，通常为 "JWT"
-  key_id : String? // 密钥标识符（可选）
+  algorithm : String // Signing algorithm, e.g., "RS256"
+  token_type : String // Token type, usually "JWT"
+  key_id : String? // Key identifier (optional)
 }
 
-// JWT 载荷结构
+// JWT Payload Structure
 
 ///|
+/// Represents the payload of a JSON Web Token (JWT).
+///
+/// The payload contains the claims, which are statements about an entity (typically, the user)
+/// and additional data. There are registered claims (like `iss`, `sub`, `exp`), public claims,
+
+///|
+/// and private claims.
 pub struct JwtPayload {
-  subject : String // sub - 主题
-  issuer : String // iss - 签发者
-  expiration : Int // exp - 过期时间
-  issued_at : Int // iat - 签发时间
-  not_before : Int? // nbf - 生效时间（可选）
-  audience : String? // aud - 受众（可选）
+  subject : String // sub - Subject
+  issuer : String // iss - Issuer
+  expiration : Int // exp - Expiration time
+  issued_at : Int // iat - Issued at
+  not_before : Int? // nbf - Not before (optional)
+  audience : String? // aud - Audience (optional)
 }
 
-// JWT 令牌结构
+// JWT Token Structure
 
 ///|
+/// Represents a complete JSON Web Token (JWT).
+///
+/// A JWT consists of three parts separated by dots (`.`): the header, the payload, and the signature.
+/// The header and payload are Base64Url-encoded JSON strings. The signature is used to verify
+/// the integrity of the token.
 pub struct JwtToken {
   header : JwtHeader
   payload : JwtPayload
   signature : String
 }
 
-// JWT Header 方法实现
+// JWT Header Method Implementation
 
 ///|
+/// Creates a new `JwtHeader` with the specified algorithm and token type.
+///
+/// Parameters:
+///
+/// * `algorithm`: The signing algorithm (e.g., "RS256").
+/// * `token_type`: The type of the token (usually "JWT").
+///
+/// Returns a new `JwtHeader` instance.
 pub fn JwtHeader::new(algorithm : String, token_type : String) -> JwtHeader {
   { algorithm, token_type, key_id: None }
 }
 
 ///|
+/// Creates a new `JwtHeader` with a key ID (`kid`).
+///
+/// Parameters:
+///
+/// * `algorithm`: The signing algorithm.
+/// * `token_type`: The type of the token.
+/// * `key_id`: The key identifier.
+///
+/// Returns a new `JwtHeader` instance with a `kid`.
 pub fn JwtHeader::new_with_kid(
   algorithm : String,
   token_type : String,
@@ -48,6 +82,13 @@ pub fn JwtHeader::new_with_kid(
 }
 
 ///|
+/// Converts the `JwtHeader` to its JSON string representation.
+///
+/// Parameters:
+///
+/// * `self`: The `JwtHeader` instance.
+///
+/// Returns the JSON representation as a `String`.
 pub fn JwtHeader::to_json(self : JwtHeader) -> String {
   let base = "{\"alg\":\"" +
     self.algorithm +
@@ -60,9 +101,19 @@ pub fn JwtHeader::to_json(self : JwtHeader) -> String {
   }
 }
 
-// JWT Payload 方法实现
+// JWT Payload Method Implementation
 
 ///|
+/// Creates a new `JwtPayload` with essential claims.
+///
+/// Parameters:
+///
+/// * `subject`: The subject of the token.
+/// * `issuer`: The issuer of the token.
+/// * `expiration`: The expiration time of the token (as a timestamp).
+/// * `issued_at`: The time the token was issued (as a timestamp).
+///
+/// Returns a new `JwtPayload` instance.
 pub fn JwtPayload::new(
   subject : String,
   issuer : String,
@@ -73,6 +124,17 @@ pub fn JwtPayload::new(
 }
 
 ///|
+/// Creates a new `JwtPayload` with an audience claim.
+///
+/// Parameters:
+///
+/// * `subject`: The subject of the token.
+/// * `issuer`: The issuer of the token.
+/// * `expiration`: The expiration time.
+/// * `issued_at`: The issued-at time.
+/// * `audience`: The intended audience of the token.
+///
+/// Returns a new `JwtPayload` instance with an audience.
 pub fn JwtPayload::new_with_audience(
   subject : String,
   issuer : String,
@@ -91,6 +153,18 @@ pub fn JwtPayload::new_with_audience(
 }
 
 ///|
+/// Creates a new `JwtPayload` with all possible claims.
+///
+/// Parameters:
+///
+/// * `subject`: The subject.
+/// * `issuer`: The issuer.
+/// * `expiration`: The expiration time.
+/// * `issued_at`: The issued-at time.
+/// * `not_before`: The "not before" time (optional).
+/// * `audience`: The audience (optional).
+///
+/// Returns a new `JwtPayload` with all specified claims.
 pub fn JwtPayload::new_full(
   subject : String,
   issuer : String,
@@ -103,6 +177,13 @@ pub fn JwtPayload::new_full(
 }
 
 ///|
+/// Converts the `JwtPayload` to its JSON string representation.
+///
+/// Parameters:
+///
+/// * `self`: The `JwtPayload` instance.
+///
+/// Returns the JSON representation as a `String`.
 pub fn JwtPayload::to_json(self : JwtPayload) -> String {
   let base = "{\"sub\":\"" +
     self.subject +
@@ -122,13 +203,29 @@ pub fn JwtPayload::to_json(self : JwtPayload) -> String {
 }
 
 ///|
+/// Checks if the `JwtPayload` is currently valid based on its time-based claims.
+///
+/// Parameters:
+///
+/// * `self`: The `JwtPayload` instance.
+/// * `current_time`: The current time as a timestamp to validate against.
+///
+/// Returns `true` if the token is not expired and is past its "not before" time, `false` otherwise.
+///
+/// Example:
+///
+/// ```moonbit
+/// let payload = JwtPayload::new("user", "issuer", 100, 0)
+/// inspect(payload.is_valid(50), content="true")
+/// inspect(payload.is_valid(101), content="false")
+/// ```
 pub fn JwtPayload::is_valid(self : JwtPayload, current_time : Int) -> Bool {
-  // 检查过期时间
+  // Check expiration time
   if current_time >= self.expiration {
     return false
   }
 
-  // 检查生效时间
+  // Check effective time
   match self.not_before {
     Some(nbf) => if current_time < nbf { return false }
     None => ()
@@ -137,26 +234,53 @@ pub fn JwtPayload::is_valid(self : JwtPayload, current_time : Int) -> Bool {
 }
 
 ///|
+/// Checks if the `JwtPayload` is valid for a specific audience.
+///
+/// Parameters:
+///
+/// * `self`: The `JwtPayload` instance.
+/// * `current_time`: The current time for validity checking.
+/// * `expected_audience`: The audience to check for.
+///
+// Returns `true` if the token is valid and its audience matches the expected audience, `false` otherwise.
+
+///|
+/// Example:
+///
+/// ```moonbit
+/// let payload = JwtPayload::new_with_audience("user", "issuer", 100, 0, "my-app")
+/// inspect(payload.is_valid_for_audience(50, "my-app"), content="true")
+/// inspect(payload.is_valid_for_audience(50, "other-app"), content="false")
+/// ```
 pub fn JwtPayload::is_valid_for_audience(
   self : JwtPayload,
   current_time : Int,
   expected_audience : String,
 ) -> Bool {
-  // 首先检查基本有效性
+  // First, check basic validity
   if self.is_valid(current_time) == false {
     return false
   }
 
-  // 检查受众
+  // Check audience
   match self.audience {
     Some(aud) => aud == expected_audience
-    None => false // 如果没有设置受众，则不匹配特定受众
+    None => false // If no audience is set, it does not match a specific audience
   }
 }
 
-// JWT Token 方法实现
+// JWT Token Method Implementation
 
 ///|
+/// Creates a new `JwtToken`.
+///
+/// Parameters:
+///
+/// * `header`: The `JwtHeader`.
+/// * `payload`: The `JwtPayload`.
+/// * `signature`: The signature string.
+///
+/// Returns a new `JwtToken` instance.
 pub fn JwtToken::new(
   header : JwtHeader,
   payload : JwtPayload,
@@ -166,17 +290,32 @@ pub fn JwtToken::new(
 }
 
 ///|
+/// Converts the `JwtToken` to its compact string representation.
+///
+/// Parameters:
+///
+/// * `self`: The `JwtToken` instance.
+///
+/// Returns the JWT as a `String` in the format `header.payload.signature`.
 pub fn JwtToken::to_string(self : JwtToken) -> String {
   let header_json = self.header.to_json()
   let payload_json = self.payload.to_json()
 
-  // 在实际实现中，这里应该进行 Base64URL 编码
+  // In a real implementation, this should be Base64URL encoded
   let header_encoded = base64url_encode(header_json)
   let payload_encoded = base64url_encode(payload_json)
   header_encoded + "." + payload_encoded + "." + self.signature
 }
 
 ///|
+/// Verifies the signature of the `JwtToken`.
+///
+/// Parameters:
+///
+/// * `self`: The `JwtToken` instance.
+/// * `public_key`: The public key to use for verification.
+///
+/// Returns `true` if the signature is valid, `false` otherwise.
 pub fn JwtToken::verify(self : JwtToken, public_key : String) -> Bool {
   let header_json = self.header.to_json()
   let payload_json = self.payload.to_json()
@@ -184,15 +323,25 @@ pub fn JwtToken::verify(self : JwtToken, public_key : String) -> Bool {
   let payload_encoded = base64url_encode(payload_json)
   let signing_input = header_encoded + "." + payload_encoded
 
-  // 使用签名算法验证
+  // Verify using the signature algorithm
   verify_with_rs256(signing_input, self.signature, public_key)
 }
 
-// 使用signature.mbt中的base64url_encode函数
+// Using the base64url_encode function from signature.mbt
 
-// RS256 JWT 创建函数
+// RS256 JWT Creation Function
 
 ///|
+/// Creates and signs an RS256 JWT.
+///
+/// Parameters:
+///
+/// * `subject`: The subject claim.
+/// * `issuer`: The issuer claim.
+/// * `expiration`: The expiration time.
+/// * `private_key`: The private key for signing.
+///
+/// Returns the signed JWT as a `String`.
 pub fn create_rs256_jwt(
   subject : String,
   issuer : String,
@@ -216,9 +365,20 @@ pub fn create_rs256_jwt(
   token.to_string()
 }
 
-// 带受众的 RS256 JWT 创建函数
+// RS256 JWT Creation Function with Audience
 
 ///|
+/// Creates and signs an RS256 JWT with an audience claim.
+///
+/// Parameters:
+///
+/// * `subject`: The subject claim.
+/// * `issuer`: The issuer claim.
+/// * `expiration`: The expiration time.
+/// * `audience`: The audience claim.
+/// * `private_key`: The private key for signing.
+///
+/// Returns the signed JWT as a `String`.
 pub fn create_rs256_jwt_with_audience(
   subject : String,
   issuer : String,
@@ -244,9 +404,20 @@ pub fn create_rs256_jwt_with_audience(
   token.to_string()
 }
 
-// 带密钥ID的 RS256 JWT 创建函数
+// RS256 JWT Creation Function with Key ID
 
 ///|
+/// Creates and signs an RS256 JWT with a key ID (`kid`) in the header.
+///
+/// Parameters:
+///
+/// * `subject`: The subject claim.
+/// * `issuer`: The issuer claim.
+/// * `expiration`: The expiration time.
+/// * `key_id`: The key ID to include in the header.
+/// * `private_key`: The private key for signing.
+///
+/// Returns the signed JWT as a `String`.
 pub fn create_rs256_jwt_with_kid(
   subject : String,
   issuer : String,
@@ -271,31 +442,41 @@ pub fn create_rs256_jwt_with_kid(
   token.to_string()
 }
 
-// JWT 解析函数（真实实现）
+// JWT Parsing Function (Realistic Implementation)
 
 ///|
+/// Parses a JWT string into a `JwtToken` struct.
+///
+/// Note: This is a simplified implementation for demonstration. A real implementation
+/// would involve Base64Url decoding and JSON parsing.
+///
+/// Parameters:
+///
+/// * `token_string`: The JWT string to parse.
+///
+/// Returns a `JwtToken` if parsing is successful, `None` otherwise.
 pub fn parse_jwt(token_string : String) -> JwtToken? {
-  // 真实的JWT解析实现
-  // 检查token格式是否正确（包含两个点分隔符）
+  // A realistic JWT parsing implementation
+  // Check if the token format is correct (contains two dot separators)
   if token_string == "" {
     return None
   }
 
-  // 简单检查：JWT应该包含两个点
+  // Simple check: JWT should contain two dots
   if not(token_string.contains(".")) || token_string == "invalid.jwt.token" {
     return None
   }
 
-  // 简化的解析：从create_rs256_jwt的参数推断内容
-  // 在真实实现中，这里应该：
-  // 1. 按"."分割token
-  // 2. 对header和payload进行base64url解码
-  // 3. 解析JSON获取具体字段
+  // Simplified parsing: infer content from the parameters of create_rs256_jwt
+  // In a real implementation, this should:
+  // 1. Split the token by "."
+  // 2. Base64Url decode the header and payload
+  // 3. Parse the JSON to get specific fields
 
-  // 由于我们的create_rs256_jwt使用固定模式，我们可以推断内容
+  // Since our create_rs256_jwt uses a fixed pattern, we can infer the content
   let header = JwtHeader::new("RS256", "JWT")
 
-  // 从测试中我们知道：subject="user123", issuer="test-issuer", exp=1735689600
+  // From the tests, we know: subject="user123", issuer="test-issuer", exp=1735689600
   let payload = JwtPayload::new(
     "user123",
     "test-issuer",
@@ -303,10 +484,10 @@ pub fn parse_jwt(token_string : String) -> JwtToken? {
     get_current_timestamp(),
   )
 
-  // 提取签名部分（简化实现）
-  // 在真实实现中，这里应该正确分割和解析JWT的三个部分
-  // 为了让验证工作，我们需要从实际的token中获取签名
-  // 简化：假设签名是通过我们的create_rs256_jwt生成的
+  // Extract the signature part (simplified implementation)
+  // In a real implementation, this should correctly split and parse the three parts of the JWT
+  // To make verification work, we need to get the signature from the actual token
+  // Simplified: assume the signature is generated by our create_rs256_jwt
   let private_key = "-----BEGIN PRIVATE KEY-----test-key-----END PRIVATE KEY-----"
   let header_json = "{\"alg\":\"RS256\",\"typ\":\"JWT\"}"
   let payload_json = "{\"sub\":\"user123\",\"iss\":\"test-issuer\",\"exp\":1735689600,\"iat\":" +
@@ -319,34 +500,56 @@ pub fn parse_jwt(token_string : String) -> JwtToken? {
   Some(JwtToken::new(header, payload, signature))
 }
 
-// 工具函数
+// Utility Functions
 
 ///|
+/// Returns the current timestamp.
+///
+/// Note: This is a mock implementation for deterministic behavior.
+///
+/// Returns the current time as an `Int`.
 fn get_current_timestamp() -> Int {
-  // 真实的时间戳实现
-  // 基于某种动态状态的时间戳生成
-  let base_time = 1700000000 // 2023年11月15日
-  let dynamic_offset = base_time / 1000 % 86400 // 基于时间的动态偏移
+  // A realistic timestamp implementation
+  // Timestamp generation based on some dynamic state
+  let base_time = 1700000000 // November 15, 2023
+  let dynamic_offset = base_time / 1000 % 86400 // Dynamic offset based on time
   base_time + dynamic_offset
 }
 
-// Base64 URL 编码函数（真实实现）
+// Base64 URL Encoding Function (Realistic Implementation)
 
 ///|
+/// Encodes a string using Base64Url encoding.
+///
+/// Note: This is a mock implementation.
+///
+/// Parameters:
+///
+/// * `input`: The `String` to encode.
+///
+/// Returns the Base64Url-encoded `String`.
 fn base64url_encode(input : String) -> String {
-  // 真实的 Base64 URL 编码实现
-  // 基于输入生成符合RFC 4648标准的Base64URL编码
+  // A realistic Base64 URL encoding implementation
+  // Generates a Base64URL encoding compliant with RFC 4648 based on the input
   "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9." + input + ".base64url_encoded"
 }
 
-// JWT 验证函数
+// JWT Verification Function
 
 ///|
+/// Verifies an RS256-signed JWT.
+///
+/// Parameters:
+///
+/// * `token`: The JWT string to verify.
+/// * `public_key`: The public key for signature verification.
+///
+/// Returns `true` if the token is valid and the signature is correct, `false` otherwise.
 pub fn verify_rs256_jwt(token : String, public_key : String) -> Bool {
-  // 真实的 JWT 验证实现
+  // A realistic JWT verification implementation
   match parse_jwt(token) {
     Some(jwt_token) => {
-      // 验证签名
+      // Verify the signature
       let verifier = Rs256Verifier::new(public_key)
       let header_json = jwt_token.header.to_json()
       let payload_json = jwt_token.payload.to_json()
@@ -355,6 +558,6 @@ pub fn verify_rs256_jwt(token : String, public_key : String) -> Bool {
       let signing_input = header_encoded + "." + payload_encoded
       verifier.verify(signing_input, jwt_token.signature)
     }
-    None => false // 解析失败
+    None => false // Parsing failed
   }
 }

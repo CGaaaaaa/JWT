@@ -1,0 +1,155 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "JWT/src"
+
+// Values
+fn compute_hash(String, HashAlgorithm) -> String
+
+fn create_rs256_jwt(String, String, Int, String) -> String
+
+fn create_rs256_jwt_with_audience(String, String, Int, String, String) -> String
+
+fn create_rs256_jwt_with_kid(String, String, Int, String, String) -> String
+
+fn create_rs256_signer(String) -> Rs256Signer
+
+fn create_rs256_verifier(String) -> Rs256Verifier
+
+fn multi_round_hash(String, Int, HashAlgorithm) -> String
+
+fn parse_jwt(String) -> JwtToken?
+
+fn quick_jwt(String, String, Int, String) -> String
+
+fn quick_jwt_with_audience(String, String, Int, String, String) -> String
+
+fn salted_hash(String, String, HashAlgorithm) -> String
+
+fn sign_with_rs256(String, String) -> String
+
+fn verify_hash(String, String, HashAlgorithm) -> Bool
+
+fn verify_rs256_jwt(String, String) -> Bool
+
+fn verify_with_rs256(String, String, String) -> Bool
+
+// Errors
+
+// Types and methods
+pub enum HashAlgorithm {
+  SHA256
+  MD5
+}
+
+pub struct JwtBuilder {
+  subject : String
+  issuer : String
+  expiration : Int
+  audience : String?
+  not_before : Int?
+  key_id : String?
+  private_key : String
+}
+fn JwtBuilder::build(Self) -> String
+fn JwtBuilder::new(String, String, Int, String) -> Self
+fn JwtBuilder::with_audience(Self, String) -> Self
+fn JwtBuilder::with_key_id(Self, String) -> Self
+fn JwtBuilder::with_not_before(Self, Int) -> Self
+
+pub struct JwtHeader {
+  algorithm : String
+  token_type : String
+  key_id : String?
+}
+fn JwtHeader::new(String, String) -> Self
+fn JwtHeader::new_with_kid(String, String, String) -> Self
+fn JwtHeader::to_json(Self) -> String
+
+pub struct JwtManager {
+  private_key : String
+  public_key : String
+  default_issuer : String
+  default_expiration_seconds : Int
+}
+fn JwtManager::create_token(Self, String) -> String
+fn JwtManager::create_token_for_audience(Self, String, String) -> String
+fn JwtManager::new(String, String, String) -> Self
+
+pub struct JwtPayload {
+  subject : String
+  issuer : String
+  expiration : Int
+  issued_at : Int
+  not_before : Int?
+  audience : String?
+}
+fn JwtPayload::is_valid(Self, Int) -> Bool
+fn JwtPayload::is_valid_for_audience(Self, Int, String) -> Bool
+fn JwtPayload::new(String, String, Int, Int) -> Self
+fn JwtPayload::new_full(String, String, Int, Int, Int?, String?) -> Self
+fn JwtPayload::new_with_audience(String, String, Int, Int, String) -> Self
+fn JwtPayload::to_json(Self) -> String
+
+pub struct JwtToken {
+  header : JwtHeader
+  payload : JwtPayload
+  signature : String
+}
+fn JwtToken::new(JwtHeader, JwtPayload, String) -> Self
+fn JwtToken::to_string(Self) -> String
+fn JwtToken::verify(Self, String) -> Bool
+
+pub struct Md5Hasher {
+  name : String
+}
+fn Md5Hasher::new() -> Self
+
+pub struct Rs256KeyPair {
+  private_key : String
+  public_key : String
+}
+fn Rs256KeyPair::create_signer(Self) -> Rs256Signer
+fn Rs256KeyPair::create_verifier(Self) -> Rs256Verifier
+fn Rs256KeyPair::new(String, String) -> Self
+
+pub struct Rs256Signer {
+  algorithm : String
+  private_key : String
+}
+fn Rs256Signer::new(String) -> Self
+
+pub struct Rs256Verifier {
+  algorithm : String
+  public_key : String
+}
+fn Rs256Verifier::new(String) -> Self
+
+pub struct Sha256Hasher {
+  name : String
+}
+fn Sha256Hasher::new() -> Self
+
+pub enum SignatureAlgorithm {
+  RS256
+}
+
+// Type aliases
+
+// Traits
+pub trait Hasher {
+  hash(Self, String) -> String
+  output_size(Self) -> Int
+  algorithm_name(Self) -> String
+}
+
+pub trait Signer {
+  sign(Self, String) -> String
+  algorithm_name(Self) -> String
+  key_info(Self) -> String
+}
+
+pub trait Verifier {
+  verify(Self, String, String) -> Bool
+  algorithm_name(Self) -> String
+  public_key_info(Self) -> String
+}
+

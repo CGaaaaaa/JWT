@@ -1,147 +1,301 @@
-// 签名算法接口标准化
-// 参考 Rust signature 库的设计思想
+// Standardize Signature Algorithm Interface
+// Inspired by the design of the Rust signature library
 
-// 签名算法特质接口 - 标准化所有签名算法的行为
+// Signature Algorithm Trait Interface - Standardizes the behavior of all signature algorithms
 
 ///|
+/// A trait for digital signature creation.
+///
+/// This trait provides a common interface for different signing algorithms.
+/// Implementors of this trait can generate a cryptographic signature for a given message.
 pub trait Signer {
-  // 对数据进行签名
+  ///|
+  /// Signs the given data.
+  ///
+  /// Parameters:
+  ///
+  /// * `self`: The signer instance.
+  /// * `data`: The data to be signed as a `String`.
+  ///
+  /// Returns the signature as a `String`.
   sign(Self, String) -> String
 
-  // 获取算法名称
+  ///|
+  /// Returns the name of the signing algorithm.
+  ///
+  /// Parameters:
+  ///
+  /// * `self`: The signer instance.
+  ///
+  /// Returns the algorithm name.
   algorithm_name(Self) -> String
 
-  // 获取密钥信息
+  ///|
+  /// Returns information about the key used for signing.
+  ///
+  /// Parameters:
+  ///
+  /// * `self`: The signer instance.
+  ///
+  /// Returns a `String` with key information.
   key_info(Self) -> String
 }
 
-// 验证器特质接口
+// Verification algorithm trait interface - Standardizes the behavior of all verification algorithms
 
 ///|
+/// A trait for verifying digital signatures.
+///
+/// This trait provides a common interface for different signature verification algorithms.
+/// Implementors can verify whether a given signature is valid for a particular message.
 pub trait Verifier {
-  // 验证签名
+  ///|
+  /// Verifies the signature of the given data.
+  ///
+  /// Parameters:
+  ///
+  /// * `self`: The verifier instance.
+  /// * `data`: The data that was signed.
+  /// * `signature`: The signature to be verified.
+  ///
+  /// Returns `true` if the signature is valid, `false` otherwise.
   verify(Self, String, String) -> Bool
 
-  // 获取算法名称  
+  ///|
+  /// Returns the name of the verification algorithm.
+  ///
+  /// Parameters:
+  ///
+  /// * `self`: The verifier instance.
+  ///
+  /// Returns the algorithm name.
   algorithm_name(Self) -> String
 
-  // 获取公钥信息
+  ///|
+  /// Returns information about the public key used for verification.
+  ///
+  /// Parameters:
+  ///
+  /// * `self`: The verifier instance.
+  ///
+  /// Returns a `String` with public key information.
   public_key_info(Self) -> String
 }
 
-// RS256 签名器实现
+// RS256 Signer Implementation
 
 ///|
+/// An implementation of the `Signer` trait for the RS256 algorithm.
+///
+/// This struct uses a private key to create digital signatures using RSA with SHA-256.
 pub struct Rs256Signer {
   algorithm : String
-  private_key : String // 简化实现，实际应该是私钥对象
+  private_key : String // Simplified implementation, should actually be a private key object
 }
 
 ///|
+/// Creates a new `Rs256Signer`.
+///
+/// Parameters:
+///
+/// * `private_key`: The private key for signing.
+///
+/// Returns a new `Rs256Signer` instance.
 pub fn Rs256Signer::new(private_key : String) -> Rs256Signer {
   { algorithm: "RS256", private_key }
 }
 
 ///|
+/// Signs data using the RS256 algorithm.
+///
+/// Note: This is a mock implementation.
+///
+/// Parameters:
+///
+/// * `self`: The `Rs256Signer` instance.
+/// * `data`: The data to sign.
+///
+/// Returns the Base64Url-encoded signature.
 impl Signer for Rs256Signer with sign(self, data) {
-  // 真实的RS256签名实现
-  // 1. 计算SHA-256哈希
+  // Real RS256 signature implementation
+  // 1. Calculate SHA-256 hash
   let hasher = Sha256Hasher::new()
   let hash = hasher.hash(data)
 
-  // 2. 使用RSA私钥签名哈希（简化实现）
+  // 2. Sign the hash with the RSA private key (simplified implementation)
   let signature_data = hash + "_signed_with_" + self.private_key
 
-  // 3. 生成Base64URL编码的签名（简化为可识别格式）
+  // 3. Generate Base64URL encoded signature (simplified to a recognizable format)
   base64url_encode(signature_data)
 }
 
 ///|
+/// Returns the algorithm name ("RS256").
+///
+/// Parameters:
+///
+/// * `self`: The `Rs256Signer` instance.
+///
+/// Returns "RS256".
 impl Signer for Rs256Signer with algorithm_name(self) {
   self.algorithm
 }
 
 ///|
+/// Returns information about the private key.
+///
+/// Parameters:
+///
+/// * `self`: The `Rs256Signer` instance.
+///
+/// Returns a descriptive string about the key.
 impl Signer for Rs256Signer with key_info(self) {
   "RS256 Private Key: " + self.private_key + "..."
 }
 
-// RS256 验证器实现
+// RS256 Verifier Implementation
 
 ///|
+/// An implementation of the `Verifier` trait for the RS256 algorithm.
+///
+/// This struct uses a public key to verify digital signatures created with RS256.
 pub struct Rs256Verifier {
   algorithm : String
-  public_key : String // 简化实现，实际应该是公钥对象
+  public_key : String // Simplified implementation, should actually be a public key object
 }
 
 ///|
+/// Creates a new `Rs256Verifier`.
+///
+/// Parameters:
+///
+/// * `public_key`: The public key for verification.
+///
+/// Returns a new `Rs256Verifier` instance.
 pub fn Rs256Verifier::new(public_key : String) -> Rs256Verifier {
   { algorithm: "RS256", public_key }
 }
 
 ///|
+/// Verifies a signature using the RS256 algorithm.
+///
+/// Note: This is a mock implementation.
+///
+/// Parameters:
+///
+/// * `self`: The `Rs256Verifier` instance.
+/// * `data`: The original data.
+/// * `signature`: The signature to verify.
+///
+/// Returns `true` if the signature is valid, `false` otherwise.
 impl Verifier for Rs256Verifier with verify(self, data, signature) {
-  // 真实的RS256验证实现
-  // 1. 计算数据的SHA-256哈希
+  // Real RS256 verification implementation
+  // 1. Calculate the SHA-256 hash of the data
   let hasher = Sha256Hasher::new()
   let hash = hasher.hash(data)
 
-  // 2. 构造期望的签名（注意：验证时需要模拟私钥签名过程）
-  // 在真实实现中，这里应该用公钥解密签名并与哈希比较
-  // 为了测试目的，我们构造对应的私钥格式来匹配
+  // 2. Construct the expected signature (note: verification needs to simulate the private key signing process)
+  // In a real implementation, this should use the public key to decrypt the signature and compare with the hash
+  // For testing purposes, we construct the corresponding private key format to match
   let private_key_from_public = self.public_key
     .replace(old="PUBLIC", new="PRIVATE")
     .replace(old="PUBLIC", new="PRIVATE")
   let signature_data = hash + "_signed_with_" + private_key_from_public
   let expected_signature = base64url_encode(signature_data)
 
-  // 3. 比较签名
+  // 3. Compare signatures
   signature == expected_signature
 }
 
 ///|
+/// Returns the algorithm name ("RS256").
+///
+/// Parameters:
+///
+/// * `self`: The `Rs256Verifier` instance.
+///
+/// Returns "RS256".
 impl Verifier for Rs256Verifier with algorithm_name(self) {
   self.algorithm
 }
 
 ///|
+/// Returns information about the public key.
+///
+/// Parameters:
+///
+/// * `self`: The `Rs256Verifier` instance.
+///
+/// Returns a descriptive string about the public key.
 impl Verifier for Rs256Verifier with public_key_info(self) {
   "RS256 Public Key: " + self.public_key + "..."
 }
 
-// 签名算法枚举
+// Signature Algorithm Enumeration
 
 ///|
+/// An enumeration of supported signature algorithms.
 pub enum SignatureAlgorithm {
   RS256
-  // 预留其他算法
+  // Reserve for other algorithms
   // HS256
   // ES256
 }
 
-// 工厂函数
+// Factory Functions
 
 ///|
+/// A factory function to create an `Rs256Signer`.
+///
+/// Parameters:
+///
+/// * `private_key`: The private key for signing.
+///
+/// Returns a new `Rs256Signer`.
 pub fn create_rs256_signer(private_key : String) -> Rs256Signer {
   Rs256Signer::new(private_key)
 }
 
 ///|
+/// A factory function to create an `Rs256Verifier`.
+///
+/// Parameters:
+///
+/// * `public_key`: The public key for verification.
+///
+/// Returns a new `Rs256Verifier`.
 pub fn create_rs256_verifier(public_key : String) -> Rs256Verifier {
   Rs256Verifier::new(public_key)
 }
 
-// 便捷签名函数
+// Convenience Signing Function
 
 ///|
+/// A convenience function to sign data with RS256.
+///
+/// Parameters:
+///
+/// * `data`: The data to sign.
+/// * `private_key`: The private key.
+///
+/// Returns the signature as a `String`.
 pub fn sign_with_rs256(data : String, private_key : String) -> String {
   let signer = create_rs256_signer(private_key)
   signer.sign(data)
 }
 
-// 便捷验证函数
+// Convenience Verification Function
 
 ///|
+/// A convenience function to verify an RS256 signature.
+///
+/// Parameters:
+///
+/// * `data`: The original data.
+/// * `signature`: The signature to verify.
+/// * `public_key`: The public key.
+///
+/// Returns `true` if the signature is valid, `false` otherwise.
 pub fn verify_with_rs256(
   data : String,
   signature : String,
@@ -151,15 +305,24 @@ pub fn verify_with_rs256(
   verifier.verify(data, signature)
 }
 
-// 密钥对结构
+// Key Pair Structure
 
 ///|
+/// A key pair for RS256, containing both a private and a public key.
 pub struct Rs256KeyPair {
   private_key : String
   public_key : String
 }
 
 ///|
+/// Creates a new `Rs256KeyPair`.
+///
+/// Parameters:
+///
+/// * `private_key`: The private key.
+/// * `public_key`: The public key.
+///
+/// Returns a new `Rs256KeyPair`.
 pub fn Rs256KeyPair::new(
   private_key : String,
   public_key : String,
@@ -168,11 +331,25 @@ pub fn Rs256KeyPair::new(
 }
 
 ///|
+/// Creates a `Rs256Signer` from the key pair's private key.
+///
+/// Parameters:
+///
+/// * `self`: The `Rs256KeyPair` instance.
+///
+/// Returns a new `Rs256Signer`.
 pub fn Rs256KeyPair::create_signer(self : Rs256KeyPair) -> Rs256Signer {
   create_rs256_signer(self.private_key)
 }
 
 ///|
+/// Creates a `Rs256Verifier` from the key pair's public key.
+///
+/// Parameters:
+///
+/// * `self`: The `Rs256KeyPair` instance.
+///
+/// Returns a new `Rs256Verifier`.
 pub fn Rs256KeyPair::create_verifier(self : Rs256KeyPair) -> Rs256Verifier {
   create_rs256_verifier(self.public_key)
 }
