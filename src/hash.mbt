@@ -83,7 +83,7 @@ impl Hasher for Md5Hasher with output_size(self) {
 // 哈希算法类型枚举
 
 ///|
-pub enum HashAlgorithm {
+pub(all) enum HashAlgorithm {
   SHA256
   MD5
 }

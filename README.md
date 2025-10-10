@@ -45,8 +45,10 @@ JWT/
 │   ├── hash.mbt          # Hash algorithm implementation (SHA256, MD5)
 │   ├── signature.mbt     # Signature algorithm implementation (HS256, RS256)
 │   ├── jwt.mbt          # JWT core functionality
+│   ├── base64.mbt       # Base64 URL encoding/decoding (RFC 4648)
 │   ├── lib.mbt          # Public library and utility functions
-│   ├── test.mbt         # Test suite
+│   ├── jwt_test.mbt     # JWT test suite
+│   ├── base64_test.mbt  # Base64 test suite
 │   └── moon.pkg.json    # Source package configuration
 ├── moon.mod.json        # Module configuration
 └── README.md           # Documentation

@@ -53,7 +53,7 @@ impl Signer for Rs256Signer with sign(self, data) {
   let signature_data = hash + "_signed_with_" + self.private_key
 
   // 3. 生成Base64URL编码的签名（简化为可识别格式）
-  base64url_encode(signature_data)
+  base64url_encode_str(signature_data)
 }
 
 ///|
@@ -93,7 +93,7 @@ impl Verifier for Rs256Verifier with verify(self, data, signature) {
     .replace(old="PUBLIC", new="PRIVATE")
     .replace(old="PUBLIC", new="PRIVATE")
   let signature_data = hash + "_signed_with_" + private_key_from_public
-  let expected_signature = base64url_encode(signature_data)
+  let expected_signature = base64url_encode_str(signature_data)
 
   // 3. 比较签名
   signature == expected_signature

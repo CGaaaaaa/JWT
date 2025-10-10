@@ -45,8 +45,10 @@ JWT/
 │   ├── hash.mbt          # 哈希算法实现 (SHA256, MD5)
 │   ├── signature.mbt     # 签名算法实现 (HS256, RS256)
 │   ├── jwt.mbt          # JWT核心功能
+│   ├── base64.mbt       # Base64 URL 编码/解码 (RFC 4648)
 │   ├── lib.mbt          # 公共库和工具函数
-│   ├── test.mbt         # 测试套件
+│   ├── jwt_test.mbt     # JWT测试套件
+│   ├── base64_test.mbt  # Base64测试套件
 │   └── moon.pkg.json    # 源码包配置
 ├── moon.mod.json        # 模块配置
 └── README.md           # 文档

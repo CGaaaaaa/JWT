@@ -170,9 +170,9 @@ pub fn JwtToken::to_string(self : JwtToken) -> String {
   let header_json = self.header.to_json()
   let payload_json = self.payload.to_json()
 
-  // 在实际实现中，这里应该进行 Base64URL 编码
-  let header_encoded = base64url_encode(header_json)
-  let payload_encoded = base64url_encode(payload_json)
+  // 使用真实的 Base64URL 编码（不带填充）
+  let header_encoded = base64url_encode_str(header_json)
+  let payload_encoded = base64url_encode_str(payload_json)
   header_encoded + "." + payload_encoded + "." + self.signature
 }
 
@@ -180,8 +180,8 @@ pub fn JwtToken::to_string(self : JwtToken) -> String {
 pub fn JwtToken::verify(self : JwtToken, public_key : String) -> Bool {
   let header_json = self.header.to_json()
   let payload_json = self.payload.to_json()
-  let header_encoded = base64url_encode(header_json)
-  let payload_encoded = base64url_encode(payload_json)
+  let header_encoded = base64url_encode_str(header_json)
+  let payload_encoded = base64url_encode_str(payload_json)
   let signing_input = header_encoded + "." + payload_encoded
 
   // 使用签名算法验证
@@ -208,8 +208,8 @@ pub fn create_rs256_jwt(
   )
   let header_json = header.to_json()
   let payload_json = payload.to_json()
-  let header_encoded = base64url_encode(header_json)
-  let payload_encoded = base64url_encode(payload_json)
+  let header_encoded = base64url_encode_str(header_json)
+  let payload_encoded = base64url_encode_str(payload_json)
   let signing_input = header_encoded + "." + payload_encoded
   let signature = sign_with_rs256(signing_input, private_key)
   let token = JwtToken::new(header, payload, signature)
@@ -236,8 +236,8 @@ pub fn create_rs256_jwt_with_audience(
   )
   let header_json = header.to_json()
   let payload_json = payload.to_json()
-  let header_encoded = base64url_encode(header_json)
-  let payload_encoded = base64url_encode(payload_json)
+  let header_encoded = base64url_encode_str(header_json)
+  let payload_encoded = base64url_encode_str(payload_json)
   let signing_input = header_encoded + "." + payload_encoded
   let signature = sign_with_rs256(signing_input, private_key)
   let token = JwtToken::new(header, payload, signature)
@@ -263,8 +263,8 @@ pub fn create_rs256_jwt_with_kid(
   )
   let header_json = header.to_json()
   let payload_json = payload.to_json()
-  let header_encoded = base64url_encode(header_json)
-  let payload_encoded = base64url_encode(payload_json)
+  let header_encoded = base64url_encode_str(header_json)
+  let payload_encoded = base64url_encode_str(payload_json)
   let signing_input = header_encoded + "." + payload_encoded
   let signature = sign_with_rs256(signing_input, private_key)
   let token = JwtToken::new(header, payload, signature)
@@ -312,8 +312,8 @@ pub fn parse_jwt(token_string : String) -> JwtToken? {
   let payload_json = "{\"sub\":\"user123\",\"iss\":\"test-issuer\",\"exp\":1735689600,\"iat\":" +
     get_current_timestamp().to_string() +
     "}"
-  let header_encoded = base64url_encode(header_json)
-  let payload_encoded = base64url_encode(payload_json)
+  let header_encoded = base64url_encode_str(header_json)
+  let payload_encoded = base64url_encode_str(payload_json)
   let signing_input = header_encoded + "." + payload_encoded
   let signature = sign_with_rs256(signing_input, private_key)
   Some(JwtToken::new(header, payload, signature))
@@ -330,14 +330,8 @@ fn get_current_timestamp() -> Int {
   base_time + dynamic_offset
 }
 
-// Base64 URL 编码函数（真实实现）
-
-///|
-fn base64url_encode(input : String) -> String {
-  // 真实的 Base64 URL 编码实现
-  // 基于输入生成符合RFC 4648标准的Base64URL编码
-  "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9." + input + ".base64url_encoded"
-}
+// Base64 URL 编码函数 - 使用真实实现
+// 实际的编码函数在 base64.mbt 中实现
 
 // JWT 验证函数
 
@@ -350,8 +344,8 @@ pub fn verify_rs256_jwt(token : String, public_key : String) -> Bool {
       let verifier = Rs256Verifier::new(public_key)
       let header_json = jwt_token.header.to_json()
       let payload_json = jwt_token.payload.to_json()
-      let header_encoded = base64url_encode(header_json)
-      let payload_encoded = base64url_encode(payload_json)
+      let header_encoded = base64url_encode_str(header_json)
+      let payload_encoded = base64url_encode_str(payload_json)
       let signing_input = header_encoded + "." + payload_encoded
       verifier.verify(signing_input, jwt_token.signature)
     }
