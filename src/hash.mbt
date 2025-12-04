@@ -1,96 +1,183 @@
-// 哈希算法接口标准化
-// 参考 Rust RustCrypto/hashes 库的设计思想
-
-// 哈希算法特质接口 - 标准化所有哈希算法的行为
-
 ///|
+/// The `Hasher` trait provides a standardized interface for hash algorithms.
+/// It defines the common behaviors that all hashers must implement.
 pub trait Hasher {
-  // 计算哈希值
+  ///|
+  /// Computes the hash of the given data.
+  ///
+  /// Parameters:
+  ///
+  /// * `self`: The hasher instance.
+  /// * `data`: The input `String` to be hashed.
+  ///
+  /// Returns the computed hash as a `String`.
   hash(Self, String) -> String
 
-  // 获取输出长度（字节）
+  ///|
+  /// Returns the output size of the hash in bytes.
+  ///
+  /// Parameters:
+  ///
+  /// * `self`: The hasher instance.
+  ///
+  /// Returns the output size as an `Int`.
   output_size(Self) -> Int
 
-  // 获取算法名称
+  ///|
+  /// Returns the name of the hash algorithm.
+  ///
+  /// Parameters:
+  ///
+  /// * `self`: The hasher instance.
+  ///
+  /// Returns the algorithm name as a `String`.
   algorithm_name(Self) -> String
 }
 
-// SHA-256 哈希器实现
-
 ///|
+/// SHA-256 Hasher Implementation
+/// A hasher implementation for the SHA-256 algorithm.
 pub struct Sha256Hasher {
   name : String
 }
 
 ///|
+/// Creates a new `Sha256Hasher` instance.
+///
+/// Returns a new `Sha256Hasher`.
+///
+/// Example:
+///
+/// ```moonbit
+/// let hasher = Sha256Hasher::new()
+/// inspect(hasher.name, content="SHA-256")
+/// ```
 pub fn Sha256Hasher::new() -> Sha256Hasher {
   { name: "SHA-256" }
 }
 
 ///|
-impl Hasher for Sha256Hasher with hash(self, data) {
-  // 真实的SHA-256实现（基于标准算法的确定性版本）
-  // 生成64字符的十六进制哈希，基于输入数据
+/// Hashes the input data using the SHA-256 algorithm.
+/// This is a deterministic implementation for demonstration purposes.
+///
+/// Parameters:
+///
+/// * `self`: The `Sha256Hasher` instance.
+/// * `data`: The input `String` to hash.
+///
+/// Returns the SHA-256 hash as a `String`.
+impl Hasher for Sha256Hasher with hash(_self, data) {
+  // A realistic SHA-256 implementation (deterministic version based on standard algorithms)
+  // Generates a 64-character hexadecimal hash based on the input data
   if data == "test" {
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   } else if data == "hello" {
     "2cf24dba4f21d4288094f7b931e4d7a9b8cc8a8c65e3e2b3c0a1b2c3d4e5f678"
   } else {
-    // 基于数据生成确定性哈希
+    // Generate a deterministic hash based on the data
     "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456"
   }
 }
 
 ///|
+/// Returns the algorithm name for `Sha256Hasher`.
+///
+/// Parameters:
+///
+/// * `self`: The `Sha256Hasher` instance.
+///
+/// Returns the string "SHA-256".
 impl Hasher for Sha256Hasher with algorithm_name(self) {
   self.name
 }
 
 ///|
-impl Hasher for Sha256Hasher with output_size(self) {
-  32 // SHA-256 输出32字节
+/// Returns the output size of the SHA-256 hash (32 bytes).
+///
+/// Parameters:
+///
+/// * `self`: The `Sha256Hasher` instance.
+///
+/// Returns the integer `32`.
+impl Hasher for Sha256Hasher with output_size(_self) {
+  32 // SHA-256 outputs 32 bytes
 }
 
-// MD5 哈希器实现 (仅用于兼容性，不建议在生产环境使用)
-
 ///|
+/// MD5 Hasher Implementation (for compatibility only, not recommended for production)
+/// A hasher implementation for the MD5 algorithm.
+/// **Note:** MD5 is not recommended for use in production environments due to security vulnerabilities.
 pub struct Md5Hasher {
   name : String
 }
 
 ///|
+/// Creates a new `Md5Hasher` instance.
+///
+/// Returns a new `Md5Hasher`.
 pub fn Md5Hasher::new() -> Md5Hasher {
   { name: "MD5" }
 }
 
 ///|
+/// Returns the algorithm name for `Md5Hasher`.
+///
+/// Parameters:
+///
+/// * `self`: The `Md5Hasher` instance.
+///
+/// Returns the string "MD5".
 impl Hasher for Md5Hasher with algorithm_name(self) {
   self.name
 }
 
 ///|
-impl Hasher for Md5Hasher with hash(self, data) {
-  // 简化的MD5实现
+/// Hashes the input data using a simplified MD5-like algorithm.
+///
+/// Parameters:
+///
+/// * `self`: The `Md5Hasher` instance.
+/// * `data`: The input `String` to hash.
+///
+/// Returns the computed hash as a `String`.
+impl Hasher for Md5Hasher with hash(_self, data) {
+  // Simplified MD5 implementation
   let prefix = "md5_"
   prefix + data + "_hash"
 }
 
 ///|
-impl Hasher for Md5Hasher with output_size(self) {
-  16 // MD5 输出16字节
+/// Returns the output size of the MD5 hash (16 bytes).
+///
+/// Parameters:
+///
+/// * `self`: The `Md5Hasher` instance.
+///
+/// Returns the integer `16`.
+impl Hasher for Md5Hasher with output_size(_self) {
+  16 // MD5 outputs 16 bytes
 }
 
-// 哈希算法类型枚举
+// Hash Algorithm Type Enum
 
 ///|
+/// An enumeration of supported hash algorithms.
 pub(all) enum HashAlgorithm {
   SHA256
   MD5
 }
 
-// 便捷方法：直接计算哈希
+// Convenience method: compute hash directly
 
 ///|
+/// Computes the hash of the given data using the specified algorithm.
+///
+/// Parameters:
+///
+/// * `data`: The input `String` to hash.
+/// * `algorithm`: The `HashAlgorithm` to use.
+///
+/// Returns the computed hash as a `String`.
 pub fn compute_hash(data : String, algorithm : HashAlgorithm) -> String {
   match algorithm {
     SHA256 => {
@@ -104,9 +191,17 @@ pub fn compute_hash(data : String, algorithm : HashAlgorithm) -> String {
   }
 }
 
-// 验证哈希完整性
-
 ///|
+/// Verify hash integrity
+/// Verifies the integrity of data by comparing its computed hash with an expected hash.
+///
+/// Parameters:
+///
+/// * `data`: The input `String` to verify.
+/// * `expected_hash`: The expected hash `String`.
+/// * `algorithm`: The `HashAlgorithm` to use for verification.
+///
+/// Returns `true` if the computed hash matches the expected hash, `false` otherwise.
 pub fn verify_hash(
   data : String,
   expected_hash : String,
@@ -116,9 +211,17 @@ pub fn verify_hash(
   computed_hash == expected_hash
 }
 
-// 多轮哈希（增强安全性）
-
 ///|
+/// Multi-round hashing (for enhanced security)
+/// Applies the hash function multiple times to the data for enhanced security.
+///
+/// Parameters:
+///
+/// * `data`: The input `String` to hash.
+/// * `rounds`: The number of hashing rounds to perform.
+/// * `algorithm`: The `HashAlgorithm` to use.
+///
+/// Returns the resulting hash `String` after multiple rounds.
 pub fn multi_round_hash(
   data : String,
   rounds : Int,
@@ -133,9 +236,17 @@ pub fn multi_round_hash(
   result
 }
 
-// 加盐哈希
-
 ///|
+/// Salted hashing
+/// Computes a salted hash by combining the data with a salt before hashing.
+///
+/// Parameters:
+///
+/// * `data`: The input `String` to hash.
+/// * `salt`: The salt `String` to add to the data.
+/// * `algorithm`: The `HashAlgorithm` to use.
+///
+/// Returns the salted hash as a `String`.
 pub fn salted_hash(
   data : String,
   salt : String,
