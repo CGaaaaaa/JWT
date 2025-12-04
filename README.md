@@ -19,6 +19,21 @@ A JWT consists of three parts separated by dots (`.`):
 - **Payload**: Claims (data)
 - **Signature**: Cryptographic verification
 
+## ⚠️ Important Notice
+
+**Cryptographic Implementation Status (RS256):**
+
+- ✅ Real end-to-end RS256: BigInt arithmetic, modular exponentiation, PKCS#1 v1.5 EMSA (SHA-256), and Base64URL are fully implemented in MoonBit without cryptographic shortcuts.
+- ✅ SHA-256 and HMAC-SHA256 per spec; Base64URL follows RFC 4648 (URL-safe, no padding).
+- ✅ JWT structure, parsing, and claim validation follow RFC 7519.
+
+**Current Limitations (non-cryptographic):**
+- ⚠️ Time source is deterministic for tests; replace with a real clock if needed.
+- ⚠️ PEM/PKCS8 parsing is not included; keys are provided via JWK components (`n`, `e`, `d`) in Base64URL.
+- ⚠️ MD5 is for compatibility demos only, not security.
+
+For production deployments, review key management, plug in a real clock, add PEM parsing if required, and conduct a security audit as usual.
+
 ## ✨ Features
 
 ### Signature Algorithms
@@ -72,26 +87,27 @@ moon build
 
 ### Basic Usage
 
-#### Creating a JWT Token
+#### Creating a JWT Token (RS256, JWK n/d)
 
 ```moonbit
-// Quick JWT creation
-let token = quick_jwt("user123", "my-service", 3600, private_key)
+// RS256 quick creation (JWK modulus n and private exponent d in Base64URL)
+let token = quick_jwt("user123", "my-service", 3600, n_b64url, d_b64url)
 
-// JWT with audience
+// With audience
 let token_with_aud = quick_jwt_with_audience(
-  "user456", 
-  "my-service", 
-  7200, 
-  "mobile-app", 
-  private_key
+  "user456",
+  "my-service",
+  7200,
+  "mobile-app",
+  n_b64url,
+  d_b64url,
 )
 ```
 
-#### Using JWT Builder Pattern
+#### Using JWT Builder Pattern (RS256, JWK)
 
 ```moonbit
-let builder = JwtBuilder::new("user789", "my-service", 1735689600, private_key)
+let builder = JwtBuilder::new("user789", "my-service", 1735689600, n_b64url, d_b64url)
 let token = builder
   .with_audience("web-app")
   .with_not_before(1640995200)
@@ -99,34 +115,27 @@ let token = builder
   .build()
 ```
 
-#### JWT Verification
+#### JWT Verification (RS256, JWK n/e)
 
 ```moonbit
-// Parse and verify token
+// Parse then verify using modulus (n) and public exponent (e)
 match parse_jwt(token_string) {
-  Some(jwt) => {
-    if jwt.verify(public_key) {
+  Some(_jwt) => {
+    if verify_rs256_jwt_jwk(token_string, n_b64url, e_b64url) {
       println("✅ JWT is valid")
-      println("Subject: " + jwt.payload.sub)
-      println("Issuer: " + jwt.payload.iss)
     } else {
       println("❌ JWT verification failed")
     }
   }
   None => println("❌ Invalid JWT format")
 }
-
-// Direct RS256 verification
-if verify_rs256_jwt(token_string, public_key) {
-  println("✅ JWT verified with RS256")
-}
 ```
 
-#### JWT Manager for Convenient Operations
+#### JWT Manager for Convenient Operations (RS256, JWK)
 
 ```moonbit
-// Create manager instance
-let manager = JwtManager::new(private_key, public_key, "my-service")
+// Create manager with JWK components
+let manager = JwtManager::new(n_b64url, e_b64url, d_b64url, "my-service")
 
 // Create tokens
 let user_token = manager.create_token("user123")
@@ -198,14 +207,20 @@ salted_hash(data: String, salt: String, algorithm: HashAlgorithm) -> String
 ### Signature Interface
 
 ```moonbit
-// RS256 operations
-sign_with_rs256(data: String, private_key: String) -> String
-verify_with_rs256(data: String, signature: String, public_key: String) -> Bool
+// RS256 operations (JWK)
+sign_with_rs256_jwk(data: String, n_b64url: String, d_b64url: String) -> String
+verify_with_rs256_jwk(data: String, signature_b64url: String, n_b64url: String, e_b64url: String) -> Bool
+
+// JWT helpers
+create_rs256_jwt_jwk(subject: String, issuer: String, expiration: Int, n_b64url: String, d_b64url: String) -> String
+create_rs256_jwt_with_audience_jwk(subject: String, issuer: String, expiration: Int, audience: String, n_b64url: String, d_b64url: String) -> String
+verify_rs256_jwt_jwk(token_string: String, n_b64url: String, e_b64url: String) -> Bool
 
 // Key pair management
 struct Rs256KeyPair {
-  private_key: String
-  public_key: String
+  n_b64url: String
+  e_b64url: String
+  d_b64url: String
 }
 
 keypair.create_signer() -> Rs256Signer
@@ -215,16 +230,17 @@ keypair.create_verifier() -> Rs256Verifier
 ### Utility Functions
 
 ```moonbit
-// Quick JWT creation
-quick_jwt(subject: String, issuer: String, expires_in_hours: Int, private_key: String) -> String
+// Quick JWT creation (RS256, JWK)
+quick_jwt(subject: String, issuer: String, expires_in_hours: Int, n_b64url: String, d_b64url: String) -> String
+quick_jwt_with_audience(subject: String, issuer: String, expires_in_hours: Int, audience: String, n_b64url: String, d_b64url: String) -> String
 
-// JWT with custom options
-create_rs256_jwt(subject: String, issuer: String, expiration: Int, private_key: String) -> String
-create_rs256_jwt_with_audience(subject: String, issuer: String, expiration: Int, audience: String, private_key: String) -> String
+// JWT with custom options (RS256, JWK)
+create_rs256_jwt_jwk(subject: String, issuer: String, expiration: Int, n_b64url: String, d_b64url: String) -> String
+create_rs256_jwt_with_audience_jwk(subject: String, issuer: String, expiration: Int, audience: String, n_b64url: String, d_b64url: String) -> String
 
 // Parsing and verification
 parse_jwt(token_string: String) -> Option[JwtToken]
-verify_rs256_jwt(token_string: String, public_key: String) -> Bool
+verify_rs256_jwt_jwk(token_string: String, n_b64url: String, e_b64url: String) -> Bool
 ```
 
 ## 🏗️ Architecture Design

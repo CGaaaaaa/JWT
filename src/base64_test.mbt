@@ -1,14 +1,16 @@
 // Base64 编码测试
 
+///|
 test "base64url_encode - simple text" {
   let input = "Hello"
   let encoded = base64url_encode_str(input)
   // "Hello" 的 Base64 URL 编码（无填充）应该是 "SGVsbG8"
   println("Input: " + input)
   println("Encoded: " + encoded)
-  inspect!(encoded, content="SGVsbG8")
+  inspect(encoded, content="SGVsbG8")
 }
 
+///|
 test "base64url_encode - JWT header" {
   let header = "{\"alg\":\"RS256\",\"typ\":\"JWT\"}"
   let encoded = base64url_encode_str(header)
@@ -24,13 +26,15 @@ test "base64url_encode - JWT header" {
   }
 }
 
+///|
 test "base64url_encode - empty string" {
   let input = ""
   let encoded = base64url_encode_str(input)
   println("Empty input encoded: [" + encoded + "]")
-  inspect!(encoded.length(), content="0")
+  inspect(encoded.length(), content="0")
 }
 
+///|
 test "base64_encode_decode - roundtrip" {
   let original = "The quick brown fox"
   let encoded = base64_encode(original)
@@ -43,6 +47,7 @@ test "base64_encode_decode - roundtrip" {
   }
 }
 
+///|
 test "base64url_encode_decode - roundtrip" {
   let original = "JWT Token Data"
   let encoded = base64url_encode_str(original)
@@ -55,6 +60,7 @@ test "base64url_encode_decode - roundtrip" {
   }
 }
 
+///|
 test "base64url vs base64 - character differences" {
   // URL-safe 使用 - 和 _ 而不是 + 和 /
   let input = "subjects?_d"
@@ -68,4 +74,3 @@ test "base64url vs base64 - character differences" {
     abort("URL-safe and standard encodings should be different")
   }
 }
-

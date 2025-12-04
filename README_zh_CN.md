@@ -19,11 +19,26 @@ JWT 由三个用点（`.`）分隔的部分组成：
 - **载荷（Payload）**：声明（数据）
 - **签名（Signature）**：密码学验证
 
+## ⚠️ 重要说明
+
+**密码学实现状态（RS256）：**
+
+- ✅ 真实的端到端 RS256：包含大整数（BigInt）运算、模幂、PKCS#1 v1.5 EMSA（SHA-256）以及 Base64URL，全为 MoonBit 实现，无“模拟/简化”。
+- ✅ SHA-256 与 HMAC-SHA256 符合规范；Base64URL 严格遵循 RFC 4648（URL-safe、无填充）。
+- ✅ JWT 结构、解析与声明校验符合 RFC 7519。
+
+**当前限制（非密码学）：**
+- ⚠️ 时间源为测试稳定性而采用确定性值；需要时可替换为真实系统时间。
+- ⚠️ 未包含 PEM/PKCS8 解析；密钥通过 JWK 组件（`n`、`e`、`d` 的 Base64URL）提供。
+- ⚠️ MD5 仅用于兼容性演示，不用于安全场景。
+
+生产使用建议按需完善密钥管理、替换真实时间源、补充 PEM 解析，并进行安全审计。
+
 ## ✨ 功能特性
 
 ### 签名算法
-- **RS256**：使用 SHA-256 的 RSA 签名（主要实现）
-- **HS256**：使用 SHA-256 的 HMAC
+- **RS256**：使用 SHA-256 的 RSA 签名（PKCS#1 v1.5）——真实实现
+- **HS256**：使用 SHA-256 的 HMAC —— 真实实现
 - 可扩展的算法接口
 
 ### 哈希算法
@@ -72,26 +87,27 @@ moon build
 
 ### 基本用法
 
-#### 创建 JWT 令牌
+#### 创建 JWT（RS256，JWK n/d）
 
 ```moonbit
-// 快速创建 JWT
-let token = quick_jwt("user123", "my-service", 3600, private_key)
+// 使用 JWK（n、d 为 Base64URL）快速创建 RS256 JWT
+let token = quick_jwt("user123", "my-service", 3600, n_b64url, d_b64url)
 
-// 带受众的 JWT
+// 带受众
 let token_with_aud = quick_jwt_with_audience(
-  "user456", 
-  "my-service", 
-  7200, 
-  "mobile-app", 
-  private_key
+  "user456",
+  "my-service",
+  7200,
+  "mobile-app",
+  n_b64url,
+  d_b64url,
 )
 ```
 
-#### 使用 JWT 构建器模式
+#### 使用构建器（RS256，JWK）
 
 ```moonbit
-let builder = JwtBuilder::new("user789", "my-service", 1735689600, private_key)
+let builder = JwtBuilder::new("user789", "my-service", 1735689600, n_b64url, d_b64url)
 let token = builder
   .with_audience("web-app")
   .with_not_before(1640995200)
@@ -99,34 +115,27 @@ let token = builder
   .build()
 ```
 
-#### JWT 验证
+#### 验证（RS256，JWK n/e）
 
 ```moonbit
-// 解析和验证令牌
+// 解析并使用 n/e 进行验证
 match parse_jwt(token_string) {
-  Some(jwt) => {
-    if jwt.verify(public_key) {
+  Some(_jwt) => {
+    if verify_rs256_jwt_jwk(token_string, n_b64url, e_b64url) {
       println("✅ JWT 有效")
-      println("主体: " + jwt.payload.sub)
-      println("签发者: " + jwt.payload.iss)
     } else {
       println("❌ JWT 验证失败")
     }
   }
   None => println("❌ 无效的 JWT 格式")
 }
-
-// 直接 RS256 验证
-if verify_rs256_jwt(token_string, public_key) {
-  println("✅ JWT 通过 RS256 验证")
-}
 ```
 
-#### JWT 管理器便捷操作
+#### JWT 管理器（RS256，JWK）
 
 ```moonbit
-// 创建管理器实例
-let manager = JwtManager::new(private_key, public_key, "my-service")
+// 使用 JWK 组件创建管理器
+let manager = JwtManager::new(n_b64url, e_b64url, d_b64url, "my-service")
 
 // 创建令牌
 let user_token = manager.create_token("user123")
@@ -198,14 +207,20 @@ salted_hash(data: String, salt: String, algorithm: HashAlgorithm) -> String
 ### 签名接口
 
 ```moonbit
-// RS256 操作
-sign_with_rs256(data: String, private_key: String) -> String
-verify_with_rs256(data: String, signature: String, public_key: String) -> Bool
+// RS256 操作（JWK）
+sign_with_rs256_jwk(data: String, n_b64url: String, d_b64url: String) -> String
+verify_with_rs256_jwk(data: String, signature_b64url: String, n_b64url: String, e_b64url: String) -> Bool
+
+// JWT 便捷方法
+create_rs256_jwt_jwk(subject: String, issuer: String, expiration: Int, n_b64url: String, d_b64url: String) -> String
+create_rs256_jwt_with_audience_jwk(subject: String, issuer: String, expiration: Int, audience: String, n_b64url: String, d_b64url: String) -> String
+verify_rs256_jwt_jwk(token_string: String, n_b64url: String, e_b64url: String) -> Bool
 
 // 密钥对管理
 struct Rs256KeyPair {
-  private_key: String
-  public_key: String
+  n_b64url: String
+  e_b64url: String
+  d_b64url: String
 }
 
 keypair.create_signer() -> Rs256Signer
@@ -215,16 +230,17 @@ keypair.create_verifier() -> Rs256Verifier
 ### 工具函数
 
 ```moonbit
-// 快速 JWT 创建
-quick_jwt(subject: String, issuer: String, expires_in_hours: Int, private_key: String) -> String
+// 快速 JWT 创建（RS256，JWK）
+quick_jwt(subject: String, issuer: String, expires_in_hours: Int, n_b64url: String, d_b64url: String) -> String
+quick_jwt_with_audience(subject: String, issuer: String, expires_in_hours: Int, audience: String, n_b64url: String, d_b64url: String) -> String
 
-// 自定义选项的 JWT
-create_rs256_jwt(subject: String, issuer: String, expiration: Int, private_key: String) -> String
-create_rs256_jwt_with_audience(subject: String, issuer: String, expiration: Int, audience: String, private_key: String) -> String
+// 自定义选项（RS256，JWK）
+create_rs256_jwt_jwk(subject: String, issuer: String, expiration: Int, n_b64url: String, d_b64url: String) -> String
+create_rs256_jwt_with_audience_jwk(subject: String, issuer: String, expiration: Int, audience: String, n_b64url: String, d_b64url: String) -> String
 
 // 解析和验证
 parse_jwt(token_string: String) -> Option[JwtToken]
-verify_rs256_jwt(token_string: String, public_key: String) -> Bool
+verify_rs256_jwt_jwk(token_string: String, n_b64url: String, e_b64url: String) -> Bool
 ```
 
 ## 🏗️ 架构设计
